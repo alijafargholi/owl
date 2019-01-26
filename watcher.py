@@ -1,31 +1,39 @@
+"""
+
+"""
 import time
 import imp
-import urllib2
-import sys
+
+import fire
+
 from watchdog.observers import Observer
-from watchdog.events import PatternMatchingEventHandler
+
+
+def main(handler, source_path):
+    """
+
+    :type handler: str
+    :param handler: path to handler module to run
+    :type source_path: str
+    :param source_path: path to the directory to watch
+    """
+    with open(handler) as f:
+        handler_source_code = ''.join([line for line in f])
+        handler_module = imp.new_module('hook')
+        exec handler_source_code in handler_module.__dict__
+
+    observer = Observer()
+    observer.schedule(handler_module.Handler(), path=source_path or '.')
+    observer.start()
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+
+    observer.join()
 
 
 if __name__ == '__main__':
-    handler, destination_path = sys.argv[1:]
-    with open(handler) as f:
-        print ''.join([line for line in f])
-
-
-    # print args
-    # code = ''.join([line for line in urllib2.urlopen(e)])
-    # hook = imp.new_module('hook')
-    # exec code in hook.__dict__
-    # hook.main()
-
-    # observer = Observer()
-    # observer.schedule(MyHandler(), path=args[0] if args else '.')
-    # observer.start()
-    #
-    # try:
-    #     while True:
-    #         time.sleep(1)
-    # except KeyboardInterrupt:
-    #     observer.stop()
-    #
-    # observer.join()
+    fire.Fire(main)
