@@ -1,5 +1,8 @@
 """
+Main watcher module
 
+Example
+>>> python -m watcher handlers/hello_world.py .
 """
 import time
 import imp
@@ -10,7 +13,7 @@ from watchdog.observers import Observer
 
 
 def main(handler, source_path):
-    """
+    """Main watcher that that takes handler and path to watch.
 
     :type handler: str
     :param handler: path to handler module to run
@@ -22,8 +25,12 @@ def main(handler, source_path):
         handler_module = imp.new_module('hook')
         exec handler_source_code in handler_module.__dict__
 
+    # start the watcher. if the path is not given it'll observes the
+    # current directory
     observer = Observer()
-    observer.schedule(handler_module.Handler(), path=source_path or '.')
+    observer.schedule(handler_module.Handler(),
+                      path=source_path or '.',
+                      recursive=True)
     observer.start()
 
     try:
